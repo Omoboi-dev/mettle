@@ -10,19 +10,12 @@ import {StrategyVault} from "./StrategyVault.sol";
 import {IValidationRegistry} from "./interfaces/IValidationRegistry.sol";
 
 /// @title AllocationController — capital routes to proven agents
-/// @notice A pooled USD index. Depositors get index shares; `allocate` routes idle pool USD
-///         into OFFICIAL vaults, weighted by each agent's ERC-8004 validation score. Only
-///         vaults from the trusted VaultFactory are ever considered, and only agents with a
-///         minimum on-chain track record (settled epochs) and a passing score are eligible —
-///         so a single lucky epoch or a fake self-reported score can't attract capital.
-///
-/// @dev Trust + anti-gaming controls (the consumer-side rules our audits required):
-///      - official-vault filter: `factory.isOfficialVault(v)` must be true.
-///      - score is read from the ValidationRegistry **filtered to that one vault** as the
-///        validator, so self-reported/rogue scores are structurally excluded.
-///      - `minEpochs` track-record gate + `minScore` quality gate.
-///      Candidate vault lists are caller-supplied and must be strictly ascending (bounds gas
-///      and guarantees uniqueness), so the unbounded official-vault set can't gas-brick us.
+/// @notice A pooled USD index. Depositors get shares; `allocate` routes idle USD into OFFICIAL
+///         vaults weighted by each agent's ERC-8004 validation score. Only agents past a minimum
+///         track record and score are eligible, so one lucky epoch or a fake score can't draw capital.
+/// @dev Anti-gaming: official-vault filter (`factory.isOfficialVault`), scores read filtered to that
+///      one vault as validator (rogue self-scores excluded), plus `minEpochs`/`minScore` gates.
+///      Candidate lists must be strictly ascending (unique + bounded) so the set can't gas-brick us.
 contract AllocationController is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 

@@ -9,24 +9,13 @@ import {IValidationRegistry} from "./interfaces/IValidationRegistry.sol";
 import {IMarket} from "./interfaces/IMarket.sol";
 
 /// @title StrategyVault — the "vault is the validator"
-/// @notice A non-custodial vault for ONE agent. Capital providers deposit the base USD asset and
-///         receive shares. The agent's `trader` key may move funds between USD and whitelisted
-///         tradable tokens through the Market — but has NO way to send funds to itself. Each epoch
-///         the vault computes the agent's REALIZED P&L on-chain (USD in vs USD out) and writes the
-///         resulting 0–100 score to the ERC-8004 ValidationRegistry as the agent's designated
-///         validator. The score is therefore impossible to fake.
-///
-/// @dev Epoch lifecycle keeps accounting trustless and oracle-free:
-///      - Between epochs the vault is FLAT (holds only USD) → share pricing is unambiguous.
-///      - `startEpoch` freezes deposits/withdrawals and snapshots the starting USD.
-///      - The agent trades; before settling it must sell everything back to USD (flat).
-///      - `settleEpoch` measures realized P&L = endUSD − startUSD, scores it, and reports it.
-///      Because start and end are both fully in USD, the difference is realized P&L by
-///      construction — no price oracle is ever trusted for the score.
-///
-///      For the vault to act as the agent's ERC-8004 validator, deployment must set this vault
-///      as the agent's `agentWallet` (operator) in the IdentityRegistry. Then the vault can
-///      open its own validation request and answer it.
+/// @notice Non-custodial vault for ONE agent. Depositors get shares; the agent's `trader` key
+///         trades vault funds between USD and whitelisted tokens via the Market, but can never
+///         withdraw to itself. Each epoch the vault measures realized USD P&L on-chain and writes
+///         a 0–100 score to the ERC-8004 ValidationRegistry as the agent's own validator.
+/// @dev Oracle-free by construction: the vault is flat (USD only) between epochs, so the start/end
+///      snapshots are unambiguous and their difference is realized P&L. Deployment must set this
+///      vault as the agent's operator so it can open and answer its own validation request.
 contract StrategyVault is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
@@ -45,9 +34,8 @@ contract StrategyVault is ReentrancyGuard {
     uint256 public totalShares;
 
     /// @notice Accounted USD = principal in/out adjusted by realized epoch P&L.
-    /// @dev This — NOT `usd.balanceOf` — is the source of truth for share pricing and the
-    ///      score denominator. Using internal accounting makes both immune to donation
-    ///      manipulation (a direct USD transfer can never inflate the score or a share price).
+    /// @dev Source of truth for pricing and scoring, NOT `usd.balanceOf` — so a direct USD
+    ///      donation can never inflate a share price or the score.
     uint256 public totalManagedUSD;
 
     address[] public tradableTokens; // whitelisted tradable tokens
@@ -56,18 +44,12 @@ contract StrategyVault is ReentrancyGuard {
     bool public epochActive;
     uint256 public epochId; // increments each time an epoch starts
     uint256 public epochStartUSD; // managed-USD snapshot at epoch open (score denominator)
-    /// @notice Realized P&L accumulated from USD trade legs during the active epoch.
-    /// @dev Only swaps with a USD leg move this; donations to the vault do not. At settle
-    ///      (vault flat) this equals the epoch's true realized trading P&L.
+    /// @notice Realized P&L from USD trade legs this epoch (donations never move it).
     int256 public epochTradePnL;
-    /// @notice Accounted USD currently available to spend on buys this epoch (ring-fence).
-    /// @dev Initialized to the epoch's starting managed USD and adjusted by USD trade legs.
-    ///      Buys cannot exceed it, so DONATED (un-accounted) USD can never be deployed.
+    /// @notice Ring-fence: USD available to spend on buys this epoch, so donated USD can't be deployed.
     uint256 public tradableUSD;
-    /// @notice Accounted units of each token the vault actually bought (ring-fence).
-    /// @dev A sell can only move accounted holdings, so DONATED tokens can never be sold, and
-    ///      `_requireFlat` checks this ledger (not raw balanceOf) so a dust donation cannot
-    ///      brick the vault. Together with `tradableUSD`, donations of ANY asset are inert.
+    /// @notice Ring-fence: accounted units bought per token. Sells only move these, and `_requireFlat`
+    ///         checks this ledger (not balanceOf), so a dust donation can't be sold or brick the vault.
     mapping(address => uint256) public accountedHoldings;
 
     // ------------------------------- Events ------------------------------- //

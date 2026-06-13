@@ -7,18 +7,13 @@ import {IValidationRegistry} from "./interfaces/IValidationRegistry.sol";
 import {IMarket} from "./interfaces/IMarket.sol";
 
 /// @title VaultFactory — launches official, trustable StrategyVaults
-/// @notice One call (`launchAgent`) atomically: registers a new ERC-8004 agent, deploys its
-///         StrategyVault, wires the vault as the agent's operator (so it can score itself),
-///         records the vault as OFFICIAL, and hands the agent NFT to the caller.
-///
-/// @dev The `isOfficialVault` registry is the trust anchor for the whole system: consumers
-///      (the AllocationController and the leaderboard) MUST only count ERC-8004 validation
-///      scores whose validator is an official vault from this factory. That is what stops a
-///      dishonest agent owner from naming themselves validator and self-reporting a fake score.
-///
-///      To wire `agentWallet` without granting the factory any NFT-transfer rights over the
-///      user's assets, the factory registers the agent itself (becoming its momentary owner),
-///      sets the wallet, then transfers the agent NFT to the caller in the same transaction.
+/// @notice `launchAgent` atomically registers an ERC-8004 agent, deploys its StrategyVault, wires
+///         the vault as the agent's operator (so it can score itself), marks it OFFICIAL, and
+///         hands the agent NFT to the caller.
+/// @dev `isOfficialVault` is the system's trust anchor: consumers must only count validation
+///      scores whose validator is a vault from this factory, which stops an owner from naming
+///      themselves validator and self-reporting a fake score. The factory registers the agent
+///      itself (momentary owner) to set the wallet, then transfers the NFT to the caller.
 contract VaultFactory {
     IIdentityRegistry public immutable identity;
     IValidationRegistry public immutable validation;
