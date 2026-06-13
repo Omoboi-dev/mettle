@@ -8,10 +8,7 @@ pragma solidity 0.8.24;
 /// @dev Faithful to EIP-8004 v1.
 interface IValidationRegistry {
     event ValidationRequest(
-        address indexed validatorAddress,
-        uint256 indexed agentId,
-        string requestURI,
-        bytes32 indexed requestHash
+        address indexed validatorAddress, uint256 indexed agentId, string requestURI, bytes32 indexed requestHash
     );
 
     event ValidationResponse(

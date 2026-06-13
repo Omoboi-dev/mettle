@@ -33,10 +33,7 @@ contract IdentityRegistry is ERC721URIStorage, IIdentityRegistry {
     // --------------------------------------------------------------------- //
 
     /// @inheritdoc IIdentityRegistry
-    function register(string calldata agentURI, MetadataEntry[] calldata metadata)
-        external
-        returns (uint256 agentId)
-    {
+    function register(string calldata agentURI, MetadataEntry[] calldata metadata) external returns (uint256 agentId) {
         agentId = _mintAgent(msg.sender, agentURI);
         for (uint256 i = 0; i < metadata.length; i++) {
             _metadata[agentId][metadata[i].metadataKey] = metadata[i].metadataValue;
@@ -83,10 +80,7 @@ contract IdentityRegistry is ERC721URIStorage, IIdentityRegistry {
     }
 
     /// @notice Set a metadata entry (owner-only).
-    function setMetadata(uint256 agentId, string calldata key, bytes calldata value)
-        external
-        onlyAgentOwner(agentId)
-    {
+    function setMetadata(uint256 agentId, string calldata key, bytes calldata value) external onlyAgentOwner(agentId) {
         _metadata[agentId][key] = value;
         emit MetadataSet(agentId, key, value);
     }

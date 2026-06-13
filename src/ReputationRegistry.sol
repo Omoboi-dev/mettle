@@ -61,17 +61,14 @@ contract ReputationRegistry is IReputationRegistry {
         address owner = _identity.ownerOf(agentId);
         if (
             msg.sender == owner || msg.sender == _identity.getAgentWallet(agentId)
-                || _identity.getApproved(agentId) == msg.sender
-                || _identity.isApprovedForAll(owner, msg.sender)
+                || _identity.getApproved(agentId) == msg.sender || _identity.isApprovedForAll(owner, msg.sender)
         ) {
             revert SelfFeedbackNotAllowed();
         }
 
         Feedback[] storage list = _feedback[agentId][msg.sender];
         uint64 feedbackIndex = uint64(list.length);
-        list.push(
-            Feedback({value: value, valueDecimals: valueDecimals, tag1: tag1, tag2: tag2, isRevoked: false})
-        );
+        list.push(Feedback({value: value, valueDecimals: valueDecimals, tag1: tag1, tag2: tag2, isRevoked: false}));
 
         if (!_isClient[agentId][msg.sender]) {
             _isClient[agentId][msg.sender] = true;
@@ -79,7 +76,17 @@ contract ReputationRegistry is IReputationRegistry {
         }
 
         emit NewFeedback(
-            agentId, msg.sender, feedbackIndex, value, valueDecimals, tag1, tag1, tag2, endpoint, feedbackURI, feedbackHash
+            agentId,
+            msg.sender,
+            feedbackIndex,
+            value,
+            valueDecimals,
+            tag1,
+            tag1,
+            tag2,
+            endpoint,
+            feedbackURI,
+            feedbackHash
         );
     }
 
@@ -100,12 +107,11 @@ contract ReputationRegistry is IReputationRegistry {
     /// @return count number of (non-revoked, matching) feedback entries.
     /// @return summaryValue average value normalized to 18 decimals.
     /// @return summaryValueDecimals always 18.
-    function getSummary(
-        uint256 agentId,
-        address[] calldata clientAddresses,
-        string calldata tag1,
-        string calldata tag2
-    ) external view returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals) {
+    function getSummary(uint256 agentId, address[] calldata clientAddresses, string calldata tag1, string calldata tag2)
+        external
+        view
+        returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals)
+    {
         address[] memory clients;
         if (clientAddresses.length == 0) {
             clients = _clients[agentId];

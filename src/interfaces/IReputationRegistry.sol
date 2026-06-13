@@ -33,12 +33,10 @@ interface IReputationRegistry {
     ) external;
 
     /// @notice Aggregated view of feedback for an agent filtered by clients/tags.
-    function getSummary(
-        uint256 agentId,
-        address[] calldata clientAddresses,
-        string calldata tag1,
-        string calldata tag2
-    ) external view returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals);
+    function getSummary(uint256 agentId, address[] calldata clientAddresses, string calldata tag1, string calldata tag2)
+        external
+        view
+        returns (uint64 count, int128 summaryValue, uint8 summaryValueDecimals);
 
     function getIdentityRegistry() external view returns (address identityRegistry);
 }

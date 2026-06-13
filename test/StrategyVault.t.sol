@@ -137,9 +137,7 @@ contract StrategyVaultTest is Test {
 
         // The agent cannot deploy donated USD: only the accounted 1,000 is tradable.
         vm.prank(trader);
-        vm.expectRevert(
-            abi.encodeWithSelector(StrategyVault.ExceedsTradableUSD.selector, 1_000 * USD + 1, 1_000 * USD)
-        );
+        vm.expectRevert(abi.encodeWithSelector(StrategyVault.ExceedsTradableUSD.selector, 1_000 * USD + 1, 1_000 * USD));
         vault.trade(address(usd), address(meth), 1_000 * USD + 1, 0);
 
         // No trades happen → realized P&L is exactly 0 and the score is neutral 50,
@@ -160,9 +158,7 @@ contract StrategyVaultTest is Test {
 
         // The agent owns 0 *accounted* mETH, so it cannot sell the donated holdings for profit.
         vm.prank(trader);
-        vm.expectRevert(
-            abi.encodeWithSelector(StrategyVault.ExceedsAccountedHoldings.selector, address(meth), 1, 0)
-        );
+        vm.expectRevert(abi.encodeWithSelector(StrategyVault.ExceedsAccountedHoldings.selector, address(meth), 1, 0));
         vault.trade(address(meth), address(usd), 1, 0);
 
         (int256 pnl, uint8 score) = _settle();
@@ -257,9 +253,7 @@ contract StrategyVaultTest is Test {
         address[] memory bad = new address[](1);
         bad[0] = address(usd);
         vm.expectRevert(abi.encodeWithSelector(StrategyVault.InvalidTradableToken.selector, address(usd)));
-        new StrategyVault(
-            address(usd), address(identity), address(validation), address(dex), agentId, trader, bad
-        );
+        new StrategyVault(address(usd), address(identity), address(validation), address(dex), agentId, trader, bad);
     }
 
     function test_AliceCanWithdrawAfterProfit() public {

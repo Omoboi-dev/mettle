@@ -28,24 +28,15 @@ contract VaultFactory {
     address[] public allVaults;
     mapping(uint256 => address) public vaultOf; // agentId => vault
 
-    event VaultLaunched(
-        uint256 indexed agentId, address indexed vault, address indexed owner, address trader
-    );
+    event VaultLaunched(uint256 indexed agentId, address indexed vault, address indexed owner, address trader);
 
     error EmptyTradableSet();
     error InvalidTradableToken(address token);
     error ZeroTrader();
     error ZeroAddress();
 
-    constructor(
-        address usd_,
-        address identity_,
-        address validation_,
-        address dex_,
-        address[] memory tradableTokens_
-    ) {
-        if (usd_ == address(0) || identity_ == address(0) || validation_ == address(0) || dex_ == address(0))
-        {
+    constructor(address usd_, address identity_, address validation_, address dex_, address[] memory tradableTokens_) {
+        if (usd_ == address(0) || identity_ == address(0) || validation_ == address(0) || dex_ == address(0)) {
             revert ZeroAddress();
         }
         if (tradableTokens_.length == 0) revert EmptyTradableSet();
@@ -71,10 +62,7 @@ contract VaultFactory {
     /// @param trader the key the agent's bot will trade from (only address allowed to trade()).
     /// @return agentId the new ERC-8004 agent id.
     /// @return vault the deployed StrategyVault address.
-    function launchAgent(string calldata agentURI, address trader)
-        external
-        returns (uint256 agentId, address vault)
-    {
+    function launchAgent(string calldata agentURI, address trader) external returns (uint256 agentId, address vault) {
         if (trader == address(0)) revert ZeroTrader();
 
         // Factory registers the agent → it is the momentary owner, which lets it set the wallet.

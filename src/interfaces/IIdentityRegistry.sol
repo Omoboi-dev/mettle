@@ -18,9 +18,7 @@ interface IIdentityRegistry is IERC721 {
     event URIUpdated(uint256 indexed agentId, string newURI, address indexed updatedBy);
 
     /// @notice Register a new agent. Mints an ERC-721 to msg.sender.
-    function register(string calldata agentURI, MetadataEntry[] calldata metadata)
-        external
-        returns (uint256 agentId);
+    function register(string calldata agentURI, MetadataEntry[] calldata metadata) external returns (uint256 agentId);
 
     function register(string calldata agentURI) external returns (uint256 agentId);
 

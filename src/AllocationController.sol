@@ -50,13 +50,9 @@ contract AllocationController is ReentrancyGuard, Ownable {
     error NotAscending(); // candidate list must be strictly ascending (unique + bounded)
     error RenounceDisabled();
 
-    constructor(
-        address usd_,
-        address factory_,
-        address validation_,
-        uint8 minScore_,
-        uint64 minEpochs_
-    ) Ownable(msg.sender) {
+    constructor(address usd_, address factory_, address validation_, uint8 minScore_, uint64 minEpochs_)
+        Ownable(msg.sender)
+    {
         if (usd_ == address(0) || factory_ == address(0) || validation_ == address(0)) revert ZeroAddress();
         usd = IERC20(usd_);
         factory = VaultFactory(factory_);
@@ -105,11 +101,7 @@ contract AllocationController is ReentrancyGuard, Ownable {
     /// @notice Deploy `amountToDeploy` of idle USD across eligible official vaults, weighted by
     ///         validation score. `candidates` must be strictly ascending official-vault
     ///         addresses (unique + bounded). Ineligible candidates are skipped.
-    function allocate(address[] calldata candidates, uint256 amountToDeploy)
-        external
-        nonReentrant
-        onlyOwner
-    {
+    function allocate(address[] calldata candidates, uint256 amountToDeploy) external nonReentrant onlyOwner {
         if (amountToDeploy == 0) revert ZeroAmount();
         if (amountToDeploy > idleUSD) revert ExceedsIdle(amountToDeploy, idleUSD);
 
