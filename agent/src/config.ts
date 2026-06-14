@@ -3,28 +3,32 @@ import deployed from "../../deployed.json" with { type: "json" };
 
 export { deployed };
 
+// More than one endpoint on purpose: public RPCs have the odd transient hiccup, so the runner can
+// retry on a different one instead of failing the round outright.
+export const RPC_URLS = ["https://rpc.sepolia.mantle.xyz", "https://mantle-sepolia.drpc.org"];
+
 export const mantleSepolia = defineChain({
   id: 5003,
   name: "Mantle Sepolia",
   nativeCurrency: { name: "MNT", symbol: "MNT", decimals: 18 },
-  rpcUrls: { default: { http: ["https://rpc.sepolia.mantle.xyz"] } },
+  rpcUrls: { default: { http: RPC_URLS } },
   blockExplorers: { default: { name: "Mantlescan", url: "https://sepolia.mantlescan.xyz" } },
 });
 
 /// The five assets an agent can choose from each round, and where their real price comes from.
-/// mETH/fBTC/MNT track ETH/BTC/MNT on Bybit; MI4 is a blend (it's an index); USDY is a yield
-/// stablecoin, so it barely moves.
-export type AssetSource = { symbol: string; token: `0x${string}`; bybit: string | null };
+/// mETH/fBTC/MNT track ETH/BTC/MNT prices (by CoinGecko id); MI4 is a blend (it's an index);
+/// USDY is a yield stablecoin, so it barely moves.
+export type AssetSource = { symbol: string; token: `0x${string}`; coingecko: string | null };
 
 export const ASSETS: AssetSource[] = [
-  { symbol: "mETH", token: deployed.tokens.mETH as `0x${string}`, bybit: "ETHUSDT" },
-  { symbol: "fBTC", token: deployed.tokens.fBTC as `0x${string}`, bybit: "BTCUSDT" },
-  { symbol: "MNT", token: deployed.tokens.MNT as `0x${string}`, bybit: "MNTUSDT" },
-  { symbol: "MI4", token: deployed.tokens.MI4 as `0x${string}`, bybit: null }, // index blend
-  { symbol: "USDY", token: deployed.tokens.USDY as `0x${string}`, bybit: null }, // yield ~flat
+  { symbol: "mETH", token: deployed.tokens.mETH as `0x${string}`, coingecko: "ethereum" },
+  { symbol: "fBTC", token: deployed.tokens.fBTC as `0x${string}`, coingecko: "bitcoin" },
+  { symbol: "MNT", token: deployed.tokens.MNT as `0x${string}`, coingecko: "mantle" },
+  { symbol: "MI4", token: deployed.tokens.MI4 as `0x${string}`, coingecko: null }, // index blend
+  { symbol: "USDY", token: deployed.tokens.USDY as `0x${string}`, coingecko: null }, // yield ~flat
 ];
 
-/// How each strategy thinks. This is the persona Claude takes on for that agent.
+/// How each strategy thinks. This is the persona the model takes on for that agent.
 export const STRATEGIES: Record<string, string> = {
   momentum:
     "You chase momentum. Favor the asset whose recent trend is strongest and still accelerating. Size up when the trend is clean and one-directional; stay in cash when it's choppy or topping.",
@@ -40,9 +44,14 @@ export const STRATEGIES: Record<string, string> = {
 
 /// Risk limits the off-chain validator enforces before any decision is executed on-chain.
 export const RISK = {
+  minSizeBps: 2_500, // if an agent trades at all, commit at least 25% — anything smaller is dust
   maxSizeBps: 10_000, // never deploy more than 100% of the book
   minConviction: 0.45, // below this confidence, force cash (no trade)
   maxMoveBps: 5_000, // ignore absurd price moves (matches the on-chain clamp)
 };
 
-export const ROUNDS_OF_HISTORY = 24; // candles of context handed to Claude
+export const ROUNDS_OF_HISTORY = 24; // candles of context handed to the model
+
+// The decision is scored on the real move over the next HOLDOUT_HOURS, held out of the context the
+// model sees. A longer holdout is a bigger, more meaningful market move than a single next candle.
+export const HOLDOUT_HOURS = 12;
