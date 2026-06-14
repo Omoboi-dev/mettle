@@ -1,37 +1,48 @@
+import { Link, NavLink } from "react-router-dom";
 import { Activity } from "lucide-react";
+import { useMettleData } from "../context/MettleContext";
 
 const LINKS = [
-  { href: "#agents", label: "Agents" },
-  { href: "#decisions", label: "Decisions" },
-  { href: "#allocation", label: "Allocation" },
-  { href: "#how", label: "How it works" },
+  { to: "/", label: "Home", end: true },
+  { to: "/decisions", label: "Decisions" },
+  { to: "/allocation", label: "Allocation" },
+  { to: "/how-it-works", label: "How it works" },
 ];
 
-export function TopNav({ live }: { live: boolean }) {
+export function TopNav() {
+  const { live } = useMettleData();
+
   return (
     <header className="sticky top-0 z-50 border-b border-line/70 bg-ink/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-        <a href="#top" className="flex items-center gap-2.5">
+        <Link to="/" className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-mint to-teal text-ink">
             <Activity size={18} strokeWidth={2.5} />
           </span>
           <span className="text-lg font-semibold tracking-tight">Mettle</span>
-        </a>
+        </Link>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        <nav className="hidden items-center gap-1 md:flex">
           {LINKS.map((l) => (
-            <a key={l.href} href={l.href} className="text-sm text-slate transition-colors hover:text-white">
+            <NavLink
+              key={l.to}
+              to={l.to}
+              end={l.end}
+              className={({ isActive }) =>
+                `rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  isActive ? "bg-white/5 text-white" : "text-slate hover:text-white"
+                }`
+              }
+            >
               {l.label}
-            </a>
+            </NavLink>
           ))}
         </nav>
 
-        <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-2 rounded-full border border-line bg-white/5 px-3 py-1.5 text-xs text-slate sm:flex">
-            <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-mint" : "bg-slate"} ${live ? "animate-pulse" : ""}`} />
-            {live ? "Live on Mantle Sepolia" : "Connecting…"}
-          </span>
-        </div>
+        <span className="hidden items-center gap-2 rounded-full border border-line bg-white/5 px-3 py-1.5 text-xs text-slate sm:flex">
+          <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-mint animate-pulse" : "bg-slate"}`} />
+          {live ? "Live on Mantle Sepolia" : "Connecting…"}
+        </span>
       </div>
     </header>
   );
