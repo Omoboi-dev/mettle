@@ -15,6 +15,7 @@ remappings = [
 [rpc_endpoints]
 mantle_sepolia = "https://rpc.sepolia.mantle.xyz"
 
-# Contract verification on Mantlescan (Etherscan-compatible explorer for Mantle Sepolia).
+# Contract verification on Mantlescan. It's Etherscan-family, so a single Etherscan API key
+# verifies via the unified V2 API (keyed by chainId 5003).
 [etherscan]
-mantle_sepolia = { key = "${MANTLESCAN_API_KEY}", url = "https://api-sepolia.mantlescan.xyz/api", chain = 5003 }
+mantle_sepolia = { key = "${ETHERSCAN_API_KEY}", chain = 5003 }
