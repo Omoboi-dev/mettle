@@ -8,7 +8,7 @@ import {IdentityRegistry} from "../src/IdentityRegistry.sol";
 import {ReputationRegistry} from "../src/ReputationRegistry.sol";
 import {ValidationRegistry} from "../src/ValidationRegistry.sol";
 import {VaultFactory} from "../src/VaultFactory.sol";
-import {AgentRunner} from "../src/AgentRunner.sol";
+import {AIRunner} from "../src/AIRunner.sol";
 import {AllocationController} from "../src/AllocationController.sol";
 import {StrategyVault} from "../src/StrategyVault.sol";
 
@@ -53,7 +53,7 @@ contract Deploy is Script {
         ValidationRegistry validation = new ValidationRegistry(address(identity));
         VaultFactory factory =
             new VaultFactory(address(usd), address(identity), address(validation), address(dex), tradables);
-        AgentRunner runner = new AgentRunner(address(dex), address(usd));
+        AIRunner runner = new AIRunner(address(dex), address(usd));
         AllocationController controller =
             new AllocationController(address(usd), address(factory), address(validation), 50, 1);
 
@@ -69,11 +69,11 @@ contract Deploy is Script {
         usd.mint(deployer, 5 * FUND);
 
         address[5] memory vaults;
-        vaults[0] = _seed(factory, runner, usd, address(meth), "ipfs://momentum-alpha", 1500, 5000);
-        vaults[1] = _seed(factory, runner, usd, address(fbtc), "ipfs://breakout-hunter", 1000, 3000);
-        vaults[2] = _seed(factory, runner, usd, address(mnt), "ipfs://volatility-harvester", 600, 2000);
-        vaults[3] = _seed(factory, runner, usd, address(usdy), "ipfs://steady-yield", 400, 1000);
-        vaults[4] = _seed(factory, runner, usd, address(mi4), "ipfs://mean-reversion", -800, -1000);
+        vaults[0] = _seed(factory, runner, usd, address(meth), "ipfs://momentum-alpha", 5000);
+        vaults[1] = _seed(factory, runner, usd, address(fbtc), "ipfs://breakout-hunter", 3000);
+        vaults[2] = _seed(factory, runner, usd, address(mnt), "ipfs://volatility-harvester", 2000);
+        vaults[3] = _seed(factory, runner, usd, address(usdy), "ipfs://steady-yield", 1000);
+        vaults[4] = _seed(factory, runner, usd, address(mi4), "ipfs://mean-reversion", -1000);
 
         vm.stopBroadcast();
 
@@ -89,7 +89,7 @@ contract Deploy is Script {
         console.log("ReputationRegistry:  ", address(reputation));
         console.log("ValidationRegistry:  ", address(validation));
         console.log("VaultFactory:        ", address(factory));
-        console.log("AgentRunner:         ", address(runner));
+        console.log("AIRunner:            ", address(runner));
         console.log("AllocationController:", address(controller));
         console.log("Vault momentum:      ", vaults[0]);
         console.log("Vault breakout:      ", vaults[1]);
@@ -98,21 +98,15 @@ contract Deploy is Script {
         console.log("Vault meanrev:       ", vaults[4]);
     }
 
-    /// @dev Launch an agent with the runner as its trader, configure it, fund it, and run one
-    ///      deterministic round so it lands on the leaderboard with a clean track record.
-    function _seed(
-        VaultFactory factory,
-        AgentRunner runner,
-        MockERC20 usd,
-        address token,
-        string memory uri,
-        int256 bias,
-        int256 move
-    ) internal returns (address vault) {
+    /// @dev Launch an agent with the runner as its trader, fund it, and run one seeded AI decision
+    ///      so it lands on the leaderboard with a clean track record and an on-chain decision log.
+    function _seed(VaultFactory factory, AIRunner runner, MockERC20 usd, address token, string memory uri, int256 move)
+        internal
+        returns (address vault)
+    {
         (, vault) = factory.launchAgent(uri, address(runner));
-        runner.configureAgent(vault, token, bias);
         usd.approve(vault, FUND);
         StrategyVault(vault).deposit(FUND);
-        runner.runEpochManual(vault, move);
+        runner.runEpochAI(vault, token, 10_000, move, "ipfs://seed-round", keccak256(bytes(uri)));
     }
 }
