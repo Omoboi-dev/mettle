@@ -33,12 +33,18 @@ export function validate(decision: Decision, knownSymbols: string[]): ValidatedD
     flags.push("invalid size -> cash");
     return { symbol: null, sizeBps: 0, flags };
   }
+  if (sizeBps === 0) {
+    return { symbol: null, sizeBps: 0, flags };
+  }
   if (sizeBps > RISK.maxSizeBps) {
     flags.push(`size ${sizeBps} capped to ${RISK.maxSizeBps}`);
     sizeBps = RISK.maxSizeBps;
   }
-  if (sizeBps === 0) {
-    return { symbol: null, sizeBps: 0, flags };
+  // A trade worth doing is worth sizing: floor it so a real position lands instead of dust that
+  // never moves the score (and that the on-chain runner can't settle cleanly).
+  if (sizeBps < RISK.minSizeBps) {
+    flags.push(`size ${sizeBps} raised to floor ${RISK.minSizeBps}`);
+    sizeBps = RISK.minSizeBps;
   }
 
   return { symbol: decision.asset, sizeBps, flags };
