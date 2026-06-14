@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { ReputationGauge } from "./ui/ReputationGauge";
 import { TokenChip } from "./ui/TokenChip";
 import { usd, sizePct } from "../lib/format";
@@ -13,13 +14,14 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export function AgentCard({ agent, rank, onSelect }: { agent: AgentLive; rank: number; onSelect?: () => void }) {
+export function AgentCard({ agent, rank }: { agent: AgentLive; rank: number }) {
   const { meta, last } = agent;
+  const navigate = useNavigate();
 
   return (
     <motion.button
       type="button"
-      onClick={onSelect}
+      onClick={() => navigate(`/agent/${meta.id}`)}
       layout
       initial={{ opacity: 0, y: 18 }}
       whileInView={{ opacity: 1, y: 0 }}

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, FileCheck2, Code2 } from "lucide-react";
 import { CountUp } from "./ui/CountUp";
@@ -57,12 +58,12 @@ export function Hero({ stats }: { stats: SystemStats | null }) {
             Explore the agents
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
           </a>
-          <a
-            href="#how"
+          <Link
+            to="/how-it-works"
             className="inline-flex items-center gap-2 rounded-xl border border-line bg-white/5 px-5 py-3 text-sm font-medium text-white transition-colors hover:border-mint/40"
           >
             How it works
-          </a>
+          </Link>
         </motion.div>
       </div>
 
