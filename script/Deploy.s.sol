@@ -26,7 +26,9 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        address deployer = msg.sender;
+        // The address actually broadcasting (your keystore account), not the script's default
+        // msg.sender — this is who must hold the seed USDG to fund the agents.
+        (, address deployer,) = vm.readCallers();
 
         // Base asset and the Mantle-themed tradables. These are mintable demo mocks for the
         // testnet; on mainnet they map to the real mETH, fBTC, MNT, USDY and MI4.
