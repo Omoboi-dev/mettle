@@ -16,16 +16,22 @@ export const mantleSepolia = defineChain({
 });
 
 /// The five assets an agent can choose from each round, and where their real price comes from.
-/// mETH/fBTC/MNT track ETH/BTC/MNT prices (by CoinGecko id); MI4 is a blend (it's an index);
-/// USDY is a yield stablecoin, so it barely moves.
-export type AssetSource = { symbol: string; token: `0x${string}`; coingecko: string | null };
+/// mETH/fBTC/MNT track ETH/BTC/MNT prices; MI4 is a blend (it's an index); USDY is a yield
+/// stablecoin, so it barely moves. Each asset names both feeds: Bybit (the primary) and a CoinGecko
+/// id (the fallback for networks where Bybit is blocked).
+export type AssetSource = {
+  symbol: string;
+  token: `0x${string}`;
+  bybit: string | null;
+  coingecko: string | null;
+};
 
 export const ASSETS: AssetSource[] = [
-  { symbol: "mETH", token: deployed.tokens.mETH as `0x${string}`, coingecko: "ethereum" },
-  { symbol: "fBTC", token: deployed.tokens.fBTC as `0x${string}`, coingecko: "bitcoin" },
-  { symbol: "MNT", token: deployed.tokens.MNT as `0x${string}`, coingecko: "mantle" },
-  { symbol: "MI4", token: deployed.tokens.MI4 as `0x${string}`, coingecko: null }, // index blend
-  { symbol: "USDY", token: deployed.tokens.USDY as `0x${string}`, coingecko: null }, // yield ~flat
+  { symbol: "mETH", token: deployed.tokens.mETH as `0x${string}`, bybit: "ETHUSDT", coingecko: "ethereum" },
+  { symbol: "fBTC", token: deployed.tokens.fBTC as `0x${string}`, bybit: "BTCUSDT", coingecko: "bitcoin" },
+  { symbol: "MNT", token: deployed.tokens.MNT as `0x${string}`, bybit: "MNTUSDT", coingecko: "mantle" },
+  { symbol: "MI4", token: deployed.tokens.MI4 as `0x${string}`, bybit: null, coingecko: null }, // index blend
+  { symbol: "USDY", token: deployed.tokens.USDY as `0x${string}`, bybit: null, coingecko: null }, // yield ~flat
 ];
 
 /// How each strategy thinks. This is the persona the model takes on for that agent.
