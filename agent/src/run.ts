@@ -18,7 +18,8 @@ function requireEnv(name: string): string {
 
 async function main() {
   const account = privateKeyToAccount(requireEnv("OPERATOR_PRIVATE_KEY") as `0x${string}`);
-  requireEnv("ANTHROPIC_API_KEY");
+  requireEnv("LLM_BASE_URL");
+  requireEnv("LLM_API_KEY");
 
   const publicClient = createPublicClient({ chain: mantleSepolia, transport: http() });
   const walletClient = createWalletClient({ account, chain: mantleSepolia, transport: http() });
