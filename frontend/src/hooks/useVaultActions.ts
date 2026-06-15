@@ -4,6 +4,7 @@ import { publicClient } from "../lib/chain";
 import { erc20Abi, vaultAbi } from "../lib/abis";
 import { TOKENS } from "../data/deployment";
 import { useWallet } from "../context/WalletContext";
+import { emitBalancesChanged, onBalancesChanged } from "../lib/balances";
 
 const MUSD = TOKENS.mUSD as `0x${string}`;
 const DECIMALS = 6;
@@ -54,6 +55,7 @@ export function useVaultActions(vault: `0x${string}`): VaultActions {
 
   useEffect(() => {
     refresh();
+    return onBalancesChanged(refresh);
   }, [refresh]);
 
   // Run a write, wait for the receipt, refresh balances. Labels the in-flight step for the UI.
@@ -70,6 +72,7 @@ export function useVaultActions(vault: `0x${string}`): VaultActions {
         await publicClient.waitForTransactionReceipt({ hash });
         setLastTx(hash);
         await refresh();
+        emitBalancesChanged();
       } catch (err) {
         const msg = (err as { shortMessage?: string }).shortMessage ?? "Transaction failed.";
         setError(msg);
