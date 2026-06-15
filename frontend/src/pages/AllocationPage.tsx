@@ -11,7 +11,7 @@ export function AllocationPage() {
   const maxPct = Math.max(1, ...ranked.map((a) => a.allocPct));
 
   return (
-    <section id="allocation" className="mx-auto max-w-6xl px-5 py-16">
+    <section id="allocation" className="mx-auto max-w-7xl px-5 py-16">
       <div className="mb-8 flex flex-col items-center text-center">
         <span className="inline-flex items-center gap-2 rounded-full border border-mint/20 bg-mint/5 px-3 py-1 text-xs font-medium uppercase tracking-wider text-mint">
           <span className="h-1.5 w-1.5 rounded-full bg-mint animate-pulse" />
@@ -24,9 +24,9 @@ export function AllocationPage() {
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
         {/* Left: the live allocation split across agents. */}
-        <div className="space-y-6 lg:col-span-3">
+        <div className="space-y-6">
           <div className="flex items-start gap-3 rounded-xl border border-mint/20 bg-mint/5 p-4">
             <Info size={18} className="mt-0.5 shrink-0 text-mint" />
             <p className="text-sm text-slate">
@@ -83,7 +83,7 @@ export function AllocationPage() {
         </div>
 
         {/* Right: deposit into the pooled index. */}
-        <div className="lg:sticky lg:top-20 lg:col-span-2">
+        <div className="lg:sticky lg:top-20">
           <IndexPanel />
         </div>
       </div>
