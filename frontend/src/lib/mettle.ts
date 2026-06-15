@@ -92,8 +92,16 @@ async function loadAgent(meta: AgentMeta): Promise<AgentLive> {
   }
 }
 
-export async function loadAgents(): Promise<{ agents: AgentLive[]; stats: SystemStats }> {
-  const agents = await Promise.all(AGENTS.map(loadAgent));
+export async function loadAgents(
+  previous: AgentLive[] = [],
+): Promise<{ agents: AgentLive[]; stats: SystemStats }> {
+  const loaded = await Promise.all(AGENTS.map(loadAgent));
+
+  // If an agent's read failed this cycle (e.g. a cold/throttled RPC after the tab was backgrounded),
+  // keep its last-known-good values instead of flashing the static seed numbers. Only genuinely
+  // fresh reads (live) replace what we already had.
+  const prevById = new Map(previous.map((p) => [p.meta.id, p]));
+  const agents = loaded.map((a) => (a.live ? a : (prevById.get(a.meta.id) ?? a)));
 
   // Allocation share: each eligible agent's weight over the total weight.
   const totalWeight = agents.reduce((s, a) => s + a.allocWeight, 0);

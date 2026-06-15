@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { feedFromAgents, loadAgents, loadDecisionHistory } from "../lib/mettle";
 import type { AgentLive, DecisionView, SystemStats } from "../types";
 
@@ -22,12 +22,15 @@ export function useMettle(pollMs = 45_000): MettleState {
   const [decisionsLoading, setDecisionsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<number | null>(null);
+  // Holds the latest agents so a failed poll can fall back to last-known-good rather than seeds.
+  const agentsRef = useRef<AgentLive[]>([]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
 
     // Agents are a handful of fast reads — render the leaderboard right away.
-    const { agents, stats } = await loadAgents();
+    const { agents, stats } = await loadAgents(agentsRef.current);
+    agentsRef.current = agents;
     setAgents(agents);
     setStats(stats);
     setLoading(false);
