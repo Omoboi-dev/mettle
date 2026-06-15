@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { WalletProvider } from "./context/WalletContext";
 import { MettleProvider } from "./context/MettleContext";
 import { Layout } from "./components/Layout";
 import { HomePage } from "./pages/HomePage";
@@ -9,17 +10,19 @@ import { AgentDetailPage } from "./pages/AgentDetailPage";
 
 export default function App() {
   return (
-    <MettleProvider>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/decisions" element={<DecisionsPage />} />
-          <Route path="/allocation" element={<AllocationPage />} />
-          <Route path="/how-it-works" element={<HowItWorksPage />} />
-          <Route path="/agent/:id" element={<AgentDetailPage />} />
-          <Route path="*" element={<HomePage />} />
-        </Route>
-      </Routes>
-    </MettleProvider>
+    <WalletProvider>
+      <MettleProvider>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/decisions" element={<DecisionsPage />} />
+            <Route path="/allocation" element={<AllocationPage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/agent/:id" element={<AgentDetailPage />} />
+            <Route path="*" element={<HomePage />} />
+          </Route>
+        </Routes>
+      </MettleProvider>
+    </WalletProvider>
   );
 }

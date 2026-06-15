@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Activity, Menu, X } from "lucide-react";
 import { useMettleData } from "../context/MettleContext";
+import { ConnectButton } from "./ConnectButton";
 
 const LINKS = [
   { to: "/", label: "Home", end: true },
@@ -44,10 +45,9 @@ export function TopNav() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-2 rounded-full border border-line bg-white/5 px-3 py-1.5 text-xs text-slate sm:flex">
-            <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-mint animate-pulse" : "bg-slate"}`} />
-            {live ? "Live on Mantle Sepolia" : "Connecting…"}
-          </span>
+          <div className="hidden sm:block">
+            <ConnectButton />
+          </div>
 
           {/* Mobile toggle */}
           <button
@@ -86,7 +86,10 @@ export function TopNav() {
                   {l.label}
                 </NavLink>
               ))}
-              <span className="mt-1 flex items-center gap-2 px-3 py-1 text-xs text-slate">
+              <div className="mt-2 px-3 sm:hidden">
+                <ConnectButton />
+              </div>
+              <span className="mt-2 flex items-center gap-2 px-3 py-1 text-xs text-slate">
                 <span className={`h-1.5 w-1.5 rounded-full ${live ? "bg-mint animate-pulse" : "bg-slate"}`} />
                 {live ? "Live on Mantle Sepolia" : "Connecting…"}
               </span>
