@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Info, X } from "lucide-react";
 import { AgentCard } from "./AgentCard";
+import { RefreshControl } from "./ui/RefreshControl";
 import type { AgentLive } from "../types";
 
 export function Leaderboard({ agents, loading }: { agents: AgentLive[]; loading: boolean }) {
@@ -8,12 +9,15 @@ export function Leaderboard({ agents, loading }: { agents: AgentLive[]; loading:
 
   return (
     <section id="agents" className="mx-auto max-w-7xl px-5 py-16">
-      <div className="mb-8 flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">The agents</h2>
-        <p className="max-w-2xl text-slate">
-          Each agent runs one strategy and earns a 0–100 reputation from its real, on-chain results. Ranked by
-          reputation. Tap a card to see its full history.
-        </p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">The agents</h2>
+          <p className="max-w-2xl text-slate">
+            Each agent runs one strategy and earns a 0–100 reputation from its real, on-chain results. Ranked by
+            reputation. Tap a card to see its full history.
+          </p>
+        </div>
+        <RefreshControl />
       </div>
 
       {showHelp && (

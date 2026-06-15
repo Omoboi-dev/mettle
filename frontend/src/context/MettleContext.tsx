@@ -8,6 +8,8 @@ interface MettleData {
   decisions: DecisionView[];
   loading: boolean;
   decisionsLoading: boolean;
+  refreshing: boolean;
+  lastUpdated: number | null;
   live: boolean;
   refresh: () => void;
 }

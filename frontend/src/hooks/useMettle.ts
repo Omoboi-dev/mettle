@@ -8,6 +8,8 @@ interface MettleState {
   decisions: DecisionView[];
   loading: boolean;
   decisionsLoading: boolean;
+  refreshing: boolean;
+  lastUpdated: number | null;
   live: boolean;
   refresh: () => void;
 }
@@ -18,20 +20,30 @@ export function useMettle(pollMs = 45_000): MettleState {
   const [decisions, setDecisions] = useState<DecisionView[]>([]);
   const [loading, setLoading] = useState(true);
   const [decisionsLoading, setDecisionsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
+    setRefreshing(true);
+
     // Agents are a handful of fast reads — render the leaderboard right away.
     const { agents, stats } = await loadAgents();
     setAgents(agents);
     setStats(stats);
     setLoading(false);
 
-    // The full decision history walks the logs and is slower; fill it in after, and fall back to
-    // each agent's latest decision if the public RPC won't serve the log range.
+    // Show each agent's latest decision straight away so the feed isn't blank, then upgrade to the
+    // full on-chain history (slower — it walks the logs). Falls back to the quick view if the public
+    // RPC won't serve the log range.
+    const quick = feedFromAgents(agents);
+    setDecisions((prev) => (prev.length ? prev : quick));
     setDecisionsLoading(true);
     const history = await loadDecisionHistory();
-    setDecisions(history.length ? history : feedFromAgents(agents));
+    setDecisions(history.length ? history : quick);
     setDecisionsLoading(false);
+
+    setLastUpdated(Date.now());
+    setRefreshing(false);
   }, []);
 
   useEffect(() => {
@@ -41,5 +53,5 @@ export function useMettle(pollMs = 45_000): MettleState {
   }, [refresh, pollMs]);
 
   const live = agents.some((a) => a.live);
-  return { agents, stats, decisions, loading, decisionsLoading, live, refresh };
+  return { agents, stats, decisions, loading, decisionsLoading, refreshing, lastUpdated, live, refresh };
 }

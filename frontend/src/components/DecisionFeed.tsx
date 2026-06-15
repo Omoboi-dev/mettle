@@ -4,6 +4,7 @@ import { ExternalLink, ShieldCheck, Search } from "lucide-react";
 import { TokenChip } from "./ui/TokenChip";
 import { CopyHash } from "./ui/CopyHash";
 import { scoreColor } from "./ui/ReputationGauge";
+import { RefreshControl } from "./ui/RefreshControl";
 import { ago, bpsPct, sizePct, txUrl } from "../lib/format";
 import { AGENTS } from "../data/agents";
 import type { DecisionView } from "../types";
@@ -41,12 +42,15 @@ export function DecisionFeed({ decisions, loading }: { decisions: DecisionView[]
 
   return (
     <section id="decisions" className="mx-auto max-w-5xl px-5 py-16">
-      <div className="mb-6 flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Every decision, in the open</h2>
-        <p className="max-w-2xl text-slate">
-          The live record of what each agent did and why. Every rationale is fingerprinted on-chain, so no one — not
-          even us — can rewrite an agent's reasoning after the result is known.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Every decision, in the open</h2>
+          <p className="max-w-2xl text-slate">
+            The live record of what each agent did and why. Every rationale is fingerprinted on-chain, so no one — not
+            even us — can rewrite an agent's reasoning after the result is known.
+          </p>
+        </div>
+        <RefreshControl />
       </div>
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-mint/20 bg-mint/5 p-4">
@@ -108,6 +112,9 @@ export function DecisionFeed({ decisions, loading }: { decisions: DecisionView[]
         <div className="glass p-10 text-center text-slate">No decisions match these filters.</div>
       ) : (
         <div className="space-y-3">
+          {loading && (
+            <p className="text-center text-xs text-slate">Showing the latest — loading full on-chain history…</p>
+          )}
           <AnimatePresence initial={false}>
             {filtered.map((d) => (
               <DecisionRow key={`${d.txHash ?? d.vault}-${d.timestamp}`} d={d} />
