@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Info } from "lucide-react";
-import { TokenChip } from "../components/ui/TokenChip";
 import { scoreColor } from "../components/ui/ReputationGauge";
+import { IndexPanel } from "../components/IndexPanel";
 import { useMettleData } from "../context/MettleContext";
 import { usd } from "../lib/format";
 
@@ -11,25 +11,32 @@ export function AllocationPage() {
   const maxPct = Math.max(1, ...ranked.map((a) => a.allocPct));
 
   return (
-    <section id="allocation" className="mx-auto max-w-4xl px-5 py-16">
-      <div className="mb-6 flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Capital follows the track record</h2>
-        <p className="max-w-2xl text-slate">
+    <section id="allocation" className="mx-auto max-w-6xl px-5 py-16">
+      <div className="mb-8 flex flex-col items-center text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-mint/20 bg-mint/5 px-3 py-1 text-xs font-medium uppercase tracking-wider text-mint">
+          <span className="h-1.5 w-1.5 rounded-full bg-mint animate-pulse" />
+          Automatic on-chain allocation
+        </span>
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Capital follows the track record</h2>
+        <p className="mt-3 max-w-2xl text-balance text-slate">
           The allocation controller routes pooled capital into agents weighted by their on-chain reputation. Proven
           agents draw more; underperforming ones draw less, and any agent below the eligibility bar draws nothing.
         </p>
       </div>
 
-      <div className="mb-8 flex items-start gap-3 rounded-xl border border-mint/20 bg-mint/5 p-4">
-        <Info size={18} className="mt-0.5 shrink-0 text-mint" />
-        <p className="text-sm text-slate">
-          <span className="font-medium text-white">How it works.</span> An agent only receives capital once it has a
-          minimum track record and an average score at or above breakeven (50). The share each one gets is its score as a
-          fraction of every eligible agent's score — automatic and on-chain.
-        </p>
-      </div>
+      <div className="grid gap-8 lg:grid-cols-5 lg:items-start">
+        {/* Left: the live allocation split across agents. */}
+        <div className="space-y-6 lg:col-span-3">
+          <div className="flex items-start gap-3 rounded-xl border border-mint/20 bg-mint/5 p-4">
+            <Info size={18} className="mt-0.5 shrink-0 text-mint" />
+            <p className="text-sm text-slate">
+              <span className="font-medium text-white">How it works.</span> An agent only receives capital once it has a
+              minimum track record and an average score at or above breakeven (50). The share each one gets is its score
+              as a fraction of every eligible agent's score, automatic and on-chain.
+            </p>
+          </div>
 
-      <div className="glass divide-y divide-line">
+          <div className="glass divide-y divide-line">
         {ranked.map((a, i) => {
           const eligible = a.allocPct > 0;
           return (
@@ -44,7 +51,7 @@ export function AllocationPage() {
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
                   <span className="text-sm font-medium">{a.meta.name}</span>
-                  <TokenChip asset={a.meta.asset} />
+                  <span className="text-xs text-slate">{a.meta.strategy}</span>
                 </div>
                 <div className="flex items-center gap-4 text-right">
                   <span className="text-sm text-slate">{usd(a.capitalUsd)}</span>
@@ -72,6 +79,13 @@ export function AllocationPage() {
             </motion.div>
           );
         })}
+          </div>
+        </div>
+
+        {/* Right: deposit into the pooled index. */}
+        <div className="lg:sticky lg:top-20 lg:col-span-2">
+          <IndexPanel />
+        </div>
       </div>
     </section>
   );

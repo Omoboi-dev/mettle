@@ -32,4 +32,12 @@ export const erc20Abi = parseAbi([
   "function mint(address to, uint256 amount)",
 ]);
 
-export const allocationAbi = parseAbi(["function eligibleWeight(address vault) view returns (uint256)"]);
+export const allocationAbi = parseAbi([
+  "function eligibleWeight(address vault) view returns (uint256)",
+  "function shares(address) view returns (uint256)",
+  "function totalShares() view returns (uint256)",
+  "function totalNAV() view returns (uint256)",
+  "function idleUSD() view returns (uint256)",
+  "function deposit(uint256 amount) returns (uint256 mintedShares)",
+  "function withdraw(uint256 shareAmount) returns (uint256 usdOut)",
+]);
