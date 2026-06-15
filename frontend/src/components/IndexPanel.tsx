@@ -7,7 +7,8 @@ import { usd, txUrl } from "../lib/format";
 
 export function IndexPanel() {
   const { address, isCorrectChain } = useWallet();
-  const { balance, positionUsd, navUsd, idleUsd, busy, error, lastTx, deposit, withdraw } = useIndexActions();
+  const { balance, positionUsd, navUsd, idleUsd, returnUsd, returnPct, busy, error, lastTx, deposit, withdraw } =
+    useIndexActions();
   const [amount, setAmount] = useState("100");
   const [wAmount, setWAmount] = useState("");
 
@@ -36,14 +37,28 @@ export function IndexPanel() {
       </p>
 
       {/* Index stats — visible to everyone, wallet or not. */}
-      <div className="mt-6 grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-line bg-white/5 px-5 py-4">
+      <div className="mt-6 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-line bg-white/5 px-4 py-4">
           <div className="text-xs uppercase tracking-wider text-slate">Total managed</div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums">{usd(navUsd)}</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">{usd(navUsd)}</div>
         </div>
-        <div className="rounded-xl border border-line bg-white/5 px-5 py-4">
-          <div className="text-xs uppercase tracking-wider text-slate">Awaiting allocation</div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums">{usd(idleUsd)}</div>
+        <div className="rounded-xl border border-line bg-white/5 px-4 py-4">
+          <div className="text-xs uppercase tracking-wider text-slate">Return</div>
+          <div
+            className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl"
+            style={{ color: returnUsd >= 0 ? "#3df5c0" : "#f0617a" }}
+          >
+            {returnUsd >= 0 ? "+" : ""}
+            {returnPct.toFixed(1)}%
+          </div>
+          <div className="text-xs tabular-nums text-slate">
+            {returnUsd >= 0 ? "+" : ""}
+            {usd(returnUsd)}
+          </div>
+        </div>
+        <div className="rounded-xl border border-line bg-white/5 px-4 py-4">
+          <div className="text-xs uppercase tracking-wider text-slate">Idle capital</div>
+          <div className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">{usd(idleUsd)}</div>
         </div>
       </div>
 

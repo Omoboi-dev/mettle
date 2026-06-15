@@ -19,6 +19,10 @@ interface IndexActions {
   navUsd: number;
   /** USD currently idle (deposited but not yet routed to agents). */
   idleUsd: number;
+  /** Profit/loss the index has earned over deposited principal, in USD. */
+  returnUsd: number;
+  /** That return as a percentage of principal. */
+  returnPct: number;
   busy: string | null;
   error: string | null;
   lastTx: `0x${string}` | null;
@@ -33,6 +37,8 @@ export function useIndexActions(): IndexActions {
   const [positionUsd, setPositionUsd] = useState(0);
   const [navUsd, setNavUsd] = useState(0);
   const [idleUsd, setIdleUsd] = useState(0);
+  const [returnUsd, setReturnUsd] = useState(0);
+  const [returnPct, setReturnPct] = useState(0);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastTx, setLastTx] = useState<`0x${string}` | null>(null);
@@ -67,6 +73,14 @@ export function useIndexActions(): IndexActions {
     if (shares !== null && totalShares !== null && nav !== null) {
       const value = totalShares > 0n ? (shares * nav) / totalShares : 0n;
       setPositionUsd(Number(formatUnits(value, DECIMALS)));
+    }
+    // Return = how much the pool's value has grown over deposited principal. Shares are minted ~1:1
+    // with USD on deposit, so totalShares (in USD units) is the principal; NAV is current value.
+    if (nav !== null && totalShares !== null) {
+      const navN = Number(formatUnits(nav, DECIMALS));
+      const principal = Number(formatUnits(totalShares, DECIMALS));
+      setReturnUsd(navN - principal);
+      setReturnPct(principal > 0 ? (navN / principal - 1) * 100 : 0);
     }
   }, [address]);
 
@@ -162,5 +176,5 @@ export function useIndexActions(): IndexActions {
     [run, walletClient, address],
   );
 
-  return { balance, positionUsd, navUsd, idleUsd, busy, error, lastTx, refresh, deposit, withdraw };
+  return { balance, positionUsd, navUsd, idleUsd, returnUsd, returnPct, busy, error, lastTx, refresh, deposit, withdraw };
 }
