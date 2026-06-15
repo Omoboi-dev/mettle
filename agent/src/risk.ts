@@ -8,9 +8,9 @@ export type ValidatedDecision = {
   flags: string[]; // any adjustments the validator made, for transparency
 };
 
-/// Enforce the risk limits before a decision is ever executed on-chain: cap the size, drop
-/// low-conviction or malformed calls to cash, and reject unknown assets. This is the safeguard
-/// against a runaway or nonsensical model output.
+/// Enforce the risk limits before a decision is ever executed on-chain: drop low-conviction or
+/// malformed calls to cash, reject unknown assets, and size the position by the agent's conviction.
+/// This is the safeguard against a runaway or nonsensical model output.
 export function validate(decision: Decision, knownSymbols: string[]): ValidatedDecision {
   const flags: string[] = [];
 
@@ -27,25 +27,13 @@ export function validate(decision: Decision, knownSymbols: string[]): ValidatedD
     return { symbol: null, sizeBps: 0, flags };
   }
 
-  // Clamp the size into the allowed range.
-  let sizeBps = Math.round(Number(decision.sizeBps));
-  if (!Number.isFinite(sizeBps) || sizeBps < 0) {
-    flags.push("invalid size -> cash");
-    return { symbol: null, sizeBps: 0, flags };
-  }
-  if (sizeBps === 0) {
-    return { symbol: null, sizeBps: 0, flags };
-  }
-  if (sizeBps > RISK.maxSizeBps) {
-    flags.push(`size ${sizeBps} capped to ${RISK.maxSizeBps}`);
-    sizeBps = RISK.maxSizeBps;
-  }
-  // A trade worth doing is worth sizing: floor it so a real position lands instead of dust that
-  // never moves the score (and that the on-chain runner can't settle cleanly).
-  if (sizeBps < RISK.minSizeBps) {
-    flags.push(`size ${sizeBps} raised to floor ${RISK.minSizeBps}`);
-    sizeBps = RISK.minSizeBps;
-  }
+  // Size by conviction: scale from the minimum position at the conviction floor up to a full book at
+  // maximum confidence. This is the agent's position sizing — a confident call takes real risk, a
+  // marginal one stays small — and it's what makes a good read actually move the score.
+  const span = 1 - RISK.minConviction;
+  const t = Math.max(0, Math.min(1, (decision.conviction - RISK.minConviction) / span));
+  const sizeBps = Math.round(RISK.minSizeBps + t * (RISK.maxSizeBps - RISK.minSizeBps));
+  flags.push(`sized ${sizeBps}bps from conviction ${decision.conviction.toFixed(2)}`);
 
   return { symbol: decision.asset, sizeBps, flags };
 }

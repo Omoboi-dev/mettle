@@ -35,7 +35,7 @@ const cgCache = new Map<string, Promise<number[]>>();
 let cgGate: Promise<void> = Promise.resolve();
 
 /// Fetch the last `count` hourly closes for a CoinGecko coin id, oldest first. This is the fallback
-/// for networks where Bybit is blocked. Two days of history comes back hourly; we trim to the tail.
+/// for networks where Bybit is blocked. A few days of history comes back hourly; we trim to the tail.
 function coingeckoCloses(id: string, count: number): Promise<number[]> {
   const hit = cgCache.get(id);
   if (hit) return hit;
@@ -43,13 +43,22 @@ function coingeckoCloses(id: string, count: number): Promise<number[]> {
     const turn = cgGate.then(() => sleep(2000));
     cgGate = turn;
     await turn;
-    const url = `${COINGECKO}/${id}/market_chart?vs_currency=usd&days=2`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`CoinGecko returned ${res.status} for ${id}`);
-    const json = (await res.json()) as { prices?: [number, number][] };
-    const prices = json.prices;
-    if (!prices || prices.length === 0) throw new Error(`CoinGecko returned no data for ${id}`);
-    return prices.map((p) => p[1]).slice(-count);
+    const url = `${COINGECKO}/${id}/market_chart?vs_currency=usd&days=4`;
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`CoinGecko returned ${res.status} for ${id}`);
+        const json = (await res.json()) as { prices?: [number, number][] };
+        const prices = json.prices;
+        if (!prices || prices.length === 0) throw new Error(`CoinGecko returned no data for ${id}`);
+        return prices.map((p) => p[1]).slice(-count);
+      } catch (err) {
+        lastErr = err;
+        await sleep(2500); // brief backoff, then one retry before giving up to the flat fallback
+      }
+    }
+    throw lastErr;
   })();
   cgCache.set(id, out);
   return out;

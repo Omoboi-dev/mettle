@@ -59,5 +59,6 @@ export const RISK = {
 export const ROUNDS_OF_HISTORY = 24; // candles of context handed to the model
 
 // The decision is scored on the real move over the next HOLDOUT_HOURS, held out of the context the
-// model sees. A longer holdout is a bigger, more meaningful market move than a single next candle.
-export const HOLDOUT_HOURS = 12;
+// model sees. Two days is a meaningful market swing — long enough that a real call genuinely moves
+// the score, rather than a single near-flat candle.
+export const HOLDOUT_HOURS = 48;
