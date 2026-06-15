@@ -41,7 +41,6 @@ export function AgentDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold">{meta.name}</h1>
-            <TokenChip asset={meta.asset} />
           </div>
           <p className="mt-1 text-sm text-slate">{meta.strategy}</p>
           <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-slate/90">{meta.blurb}</p>

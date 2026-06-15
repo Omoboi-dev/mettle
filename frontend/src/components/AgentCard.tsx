@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ReputationGauge } from "./ui/ReputationGauge";
-import { TokenChip } from "./ui/TokenChip";
 import { usd, sizePct } from "../lib/format";
 import type { AgentLive } from "../types";
 
@@ -45,7 +44,6 @@ export function AgentCard({ agent, rank }: { agent: AgentLive; rank: number }) {
             <p className="text-xs text-slate">{meta.strategy}</p>
           </div>
         </div>
-        <TokenChip asset={meta.asset} />
       </div>
 
       <p className="text-sm leading-relaxed text-slate/90">{meta.blurb}</p>
