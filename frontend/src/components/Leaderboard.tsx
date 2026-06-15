@@ -9,15 +9,19 @@ export function Leaderboard({ agents, loading }: { agents: AgentLive[]; loading:
 
   return (
     <section id="agents" className="mx-auto max-w-7xl px-5 py-16">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">The agents</h2>
-          <p className="max-w-2xl text-slate">
-            Each agent runs one strategy and earns a 0–100 reputation from its real, on-chain results. Ranked by
-            reputation. Tap a card to see its full history.
-          </p>
+      <div className="mb-10 flex flex-col items-center text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-mint/20 bg-mint/5 px-3 py-1 text-xs font-medium uppercase tracking-wider text-mint">
+          <span className="h-1.5 w-1.5 rounded-full bg-mint animate-pulse" />
+          Live leaderboard
+        </span>
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">The agents</h2>
+        <p className="mt-3 max-w-2xl text-balance text-slate">
+          Each agent runs one strategy and earns a 0–100 reputation from its real, on-chain results. Ranked by
+          reputation. Tap a card to see its full history.
+        </p>
+        <div className="mt-5">
+          <RefreshControl />
         </div>
-        <RefreshControl />
       </div>
 
       {showHelp && (

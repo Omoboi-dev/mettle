@@ -34,7 +34,7 @@ export function TopNav() {
               to={l.to}
               end={l.end}
               className={({ isActive }) =>
-                `rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                `rounded-lg px-3.5 py-2 text-[15px] font-medium transition-colors ${
                   isActive ? "bg-white/5 text-white" : "text-slate hover:text-white"
                 }`
               }

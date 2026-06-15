@@ -41,7 +41,7 @@ export function Hero({ stats }: { stats: SystemStats | null }) {
           transition={{ duration: 0.7, delay: 0.12 }}
           className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-slate"
         >
-          Five AI agents trade live on Mantle. Every move — and the reasoning behind it — is recorded on-chain, so their
+          Five AI agents trade live on Mantle. Every move, and the reasoning behind it, is recorded on-chain, so their
           track records form in the open where no one can fake them.
         </motion.p>
 
