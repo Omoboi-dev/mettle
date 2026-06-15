@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, ShieldCheck, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, ShieldCheck, Search } from "lucide-react";
 import { TokenChip } from "./ui/TokenChip";
 import { CopyHash } from "./ui/CopyHash";
 import { scoreColor } from "./ui/ReputationGauge";
@@ -10,6 +10,8 @@ import { AGENTS } from "../data/agents";
 import type { DecisionView } from "../types";
 
 type TypeFilter = "All" | "Trades" | "Cash";
+
+const PAGE_SIZE = 10;
 
 function initials(name: string) {
   return name
@@ -28,6 +30,7 @@ export function DecisionFeed({ decisions, loading }: { decisions: DecisionView[]
   const [agent, setAgent] = useState("All");
   const [type, setType] = useState<TypeFilter>("All");
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     return decisions.filter((d) => {
@@ -40,17 +43,37 @@ export function DecisionFeed({ decisions, loading }: { decisions: DecisionView[]
     });
   }, [decisions, agent, type, query]);
 
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  // A filter change can shrink the list below the current page — clamp back into range.
+  useEffect(() => {
+    setPage((p) => Math.min(p, pageCount));
+  }, [pageCount]);
+  // Any filter/search change jumps back to the first page.
+  useEffect(() => {
+    setPage(1);
+  }, [agent, type, query]);
+
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const goTo = (p: number) => {
+    setPage(p);
+    document.getElementById("decisions")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <section id="decisions" className="mx-auto max-w-5xl px-5 py-16">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Every decision, in the open</h2>
-          <p className="max-w-2xl text-slate">
-            The live record of what each agent did and why. Every rationale is fingerprinted on-chain, so no one — not
-            even us — can rewrite an agent's reasoning after the result is known.
-          </p>
+      <div className="mb-8 flex flex-col items-center text-center">
+        <span className="inline-flex items-center gap-2 rounded-full border border-mint/20 bg-mint/5 px-3 py-1 text-xs font-medium uppercase tracking-wider text-mint">
+          <span className="h-1.5 w-1.5 rounded-full bg-mint animate-pulse" />
+          Live decision log
+        </span>
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Every decision, in the open</h2>
+        <p className="mt-3 max-w-2xl text-balance text-slate">
+          The live record of what each agent did and why. Every rationale is fingerprinted on-chain, so no one, not
+          even us, can rewrite an agent's reasoning after the result is known.
+        </p>
+        <div className="mt-5">
+          <RefreshControl />
         </div>
-        <RefreshControl />
       </div>
 
       <div className="mb-6 flex items-start gap-3 rounded-xl border border-mint/20 bg-mint/5 p-4">
@@ -113,16 +136,74 @@ export function DecisionFeed({ decisions, loading }: { decisions: DecisionView[]
       ) : (
         <div className="space-y-3">
           {loading && (
-            <p className="text-center text-xs text-slate">Showing the latest — loading full on-chain history…</p>
+            <p className="text-center text-xs text-slate">Showing the latest, loading full on-chain history…</p>
           )}
           <AnimatePresence initial={false}>
-            {filtered.map((d) => (
+            {paged.map((d) => (
               <DecisionRow key={`${d.txHash ?? d.vault}-${d.timestamp}`} d={d} />
             ))}
           </AnimatePresence>
+
+          {pageCount > 1 && (
+            <Pagination page={page} pageCount={pageCount} total={filtered.length} onGoTo={goTo} />
+          )}
         </div>
       )}
     </section>
+  );
+}
+
+function Pagination({
+  page,
+  pageCount,
+  total,
+  onGoTo,
+}: {
+  page: number;
+  pageCount: number;
+  total: number;
+  onGoTo: (p: number) => void;
+}) {
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+  const pages = Array.from({ length: pageCount }, (_, i) => i + 1);
+
+  return (
+    <div className="flex flex-col items-center gap-3 pt-6 sm:flex-row sm:justify-between">
+      <span className="text-xs text-slate">
+        Showing {from}–{to} of {total} decisions
+      </span>
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={() => onGoTo(page - 1)}
+          disabled={page === 1}
+          className="inline-flex items-center gap-1 rounded-lg border border-line bg-white/5 px-2.5 py-1.5 text-sm text-slate transition-colors hover:border-mint/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <ChevronLeft size={15} /> Prev
+        </button>
+        {pages.map((p) => (
+          <button
+            key={p}
+            onClick={() => onGoTo(p)}
+            aria-current={p === page ? "page" : undefined}
+            className={`h-8 w-8 rounded-lg text-sm tabular-nums transition-colors ${
+              p === page
+                ? "bg-mint/15 font-semibold text-mint"
+                : "border border-line bg-white/5 text-slate hover:border-mint/40 hover:text-white"
+            }`}
+          >
+            {p}
+          </button>
+        ))}
+        <button
+          onClick={() => onGoTo(page + 1)}
+          disabled={page === pageCount}
+          className="inline-flex items-center gap-1 rounded-lg border border-line bg-white/5 px-2.5 py-1.5 text-sm text-slate transition-colors hover:border-mint/40 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Next <ChevronRight size={15} />
+        </button>
+      </div>
+    </div>
   );
 }
 
