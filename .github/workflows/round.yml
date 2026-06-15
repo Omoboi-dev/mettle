@@ -1,0 +1,38 @@
+name: Mettle round
+
+# Runs one trading round + index rebalance on a schedule, so the agents keep producing fresh
+# on-chain decisions without anyone's machine being online. The operator key and LLM credentials
+# come from encrypted repository secrets (never committed).
+
+on:
+  schedule:
+    - cron: "0 * * * *" # top of every hour (UTC); GitHub may delay a few minutes
+  workflow_dispatch: {} # allow manual "Run workflow" from the Actions tab
+
+# Don't let a slow round overlap with the next scheduled one.
+concurrency:
+  group: mettle-round
+  cancel-in-progress: false
+
+jobs:
+  round:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install agent dependencies
+        working-directory: agent
+        run: npm install
+
+      - name: Run one round and rebalance the index
+        working-directory: agent
+        env:
+          OPERATOR_PRIVATE_KEY: ${{ secrets.OPERATOR_PRIVATE_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+        run: npm run round
