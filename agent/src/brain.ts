@@ -61,13 +61,25 @@ export async function decide(
   strategyName: string,
   persona: string,
   market: AssetMarket[],
+  homeAsset?: string,
 ): Promise<Decision> {
   const symbols = market.map((m) => m.symbol);
   const table = market.map((m) => `- ${m.symbol}: ${features(m.contextCloses)}`).join("\n");
 
+  // Each agent knows the market it specializes in, but weighs it on equal terms with the rest —
+  // it picks its home asset only when that's genuinely the best call this round, otherwise it
+  // takes the better opportunity. No forced preference.
+  const homeLine =
+    homeAsset && symbols.includes(homeAsset)
+      ? `You specialize in ${homeAsset}, but evaluate every asset on its merits this round. ` +
+        `Your home asset has no built-in advantage: trade ${homeAsset} when it is the best fit for ` +
+        `your strategy, otherwise take the stronger opportunity, or stay in CASH.\n\n`
+      : "";
+
   const system =
     `You are an autonomous on-chain trading agent running the "${strategyName}" strategy on Mantle.\n` +
     `${persona}\n\n` +
+    homeLine +
     `Each round you pick ONE asset to go long for the next hour, sized as a fraction of your book, ` +
     `or you stay in CASH if nothing fits your strategy. You only go long (no shorting). Sitting in ` +
     `cash is better than forcing a weak trade; size reflects conviction and risk.\n\n` +

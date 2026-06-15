@@ -5,6 +5,7 @@
   "description": "The off-chain brain: reads real market data, asks an LLM for each agent's trade, and runs it on-chain.",
   "scripts": {
     "round": "tsx src/run.ts",
+    "loop": "ROUND_INTERVAL_MINUTES=${ROUND_INTERVAL_MINUTES:-30} tsx src/run.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

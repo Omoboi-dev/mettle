@@ -48,6 +48,18 @@ export const STRATEGIES: Record<string, string> = {
     "You fade extremes. Favor an asset that has overshot and looks stretched, betting it reverts. If nothing looks stretched, stay in cash.",
 };
 
+/// Each agent's "home" asset — the market it specializes in. The model still chooses freely from
+/// all assets each round, but it's told to favor its home unless another is clearly more compelling
+/// for its strategy. This keeps the agents from all crowding into whatever's hottest, so the
+/// leaderboard reflects distinct specializations rather than five identical calls.
+export const HOME_ASSET: Record<string, string> = {
+  momentum: "mETH",
+  breakout: "fBTC",
+  volatility: "MNT",
+  steady: "USDY",
+  "mean-reversion": "MI4",
+};
+
 /// Risk limits the off-chain validator enforces before any decision is executed on-chain.
 export const RISK = {
   minSizeBps: 2_500, // if an agent trades at all, commit at least 25% — anything smaller is dust

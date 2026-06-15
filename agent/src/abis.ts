@@ -11,3 +11,12 @@ export const vaultAbi = parseAbi([
   "function agentId() view returns (uint256)",
   "function epochId() view returns (uint256)",
 ]);
+
+export const allocationControllerAbi = parseAbi([
+  "function owner() view returns (address)",
+  "function idleUSD() view returns (uint256)",
+  "function totalNAV() view returns (uint256)",
+  "function deployedVaultCount() view returns (uint256)",
+  "function allocate(address[] candidates, uint256 amountToDeploy)",
+  "function recall(address[] vaults)",
+]);
