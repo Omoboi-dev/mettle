@@ -2,6 +2,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { TopNav } from "./TopNav";
+import { BackgroundFX } from "./BackgroundFX";
 import { CORE } from "../data/deployment";
 import { addressUrl } from "../lib/format";
 
@@ -15,6 +16,8 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      {/* Animated network constellation behind the whole app. */}
+      <BackgroundFX />
       <TopNav />
       <motion.main
         key={pathname}

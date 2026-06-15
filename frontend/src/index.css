@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0a0b0d;
-  --color-surface: #0e1014;
-  --color-surface-2: #14171d;
-  --color-line: #20242c;
+  --color-ink: #0e0f12;
+  --color-surface: #15161b;
+  --color-surface-2: #1b1d24;
+  --color-line: #262a32;
   --color-mint: #3df5c0;
   --color-teal: #16b8a6;
   --color-coral: #f0617a;
@@ -23,8 +23,12 @@
 
   body {
     margin: 0;
-    background: var(--color-ink);
-    color: #e7eaee;
+    /* Soft vertical wash rather than flat black — lifts the page off pure black so it reads warmer
+       and less clinical. */
+    background:
+      radial-gradient(120% 80% at 50% -10%, #181a20 0%, transparent 55%),
+      var(--color-ink);
+    color: #e9ecf1;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -35,20 +39,20 @@
     content: "";
     position: fixed;
     inset: 0;
-    z-index: -2;
+    z-index: -3;
     background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
     background-size: 28px 28px;
     pointer-events: none;
   }
 
-  /* Slow ambient glow that drifts behind the content. */
+  /* Soft top vignette so the very top of the page reads a touch warmer/lighter. */
   body::after {
     content: "";
     position: fixed;
     inset: -20% -10% auto -10%;
     height: 70vh;
-    z-index: -1;
-    background: radial-gradient(60% 60% at 50% 0%, rgba(61, 245, 192, 0.08), transparent 70%);
+    z-index: -2;
+    background: radial-gradient(60% 60% at 50% 0%, rgba(61, 245, 192, 0.1), transparent 70%);
     pointer-events: none;
   }
 
@@ -58,6 +62,15 @@
 }
 
 @layer components {
+  /* Animated network backdrop, drawn on a canvas (see BackgroundFX). Sits behind the app and never
+     intercepts input. */
+  .bg-network {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
   /* Glassmorphism card used across the app. */
   .glass {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
