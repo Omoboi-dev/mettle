@@ -129,14 +129,26 @@ async function rebalanceIndex(account: Account) {
       return;
     }
 
-    console.log("\nIndex: rebalancing pooled capital by latest scores...");
-
-    // Pull all deployed capital back to idle so we can re-weight by the scores from this round.
+    // Is there anything to do? Capital is either idle (fresh deposits) or already deployed in vaults.
+    // If the pool is completely empty, say so and stop — no point recalling or allocating nothing.
     const deployedCount = (await pc.readContract({
       address: CONTROLLER,
       abi: allocationControllerAbi,
       functionName: "deployedVaultCount",
     })) as bigint;
+    const idleBefore = (await pc.readContract({
+      address: CONTROLLER,
+      abi: allocationControllerAbi,
+      functionName: "idleUSD",
+    })) as bigint;
+    if (idleBefore === 0n && deployedCount === 0n) {
+      console.log("\nIndex: no capital to allocate at the moment.");
+      return;
+    }
+
+    console.log("\nIndex: allocating pooled capital by latest scores...");
+
+    // Pull all deployed capital back to idle so we can re-weight by the scores from this round.
     if (deployedCount > 0n) {
       const { request } = await pc.simulateContract({
         account,
@@ -156,7 +168,7 @@ async function rebalanceIndex(account: Account) {
       functionName: "idleUSD",
     })) as bigint;
     if (idle === 0n) {
-      console.log("  nothing idle to deploy.");
+      console.log("  no capital to allocate at the moment.");
       return;
     }
 
