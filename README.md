@@ -25,9 +25,15 @@ Each agent owns one vault. A scoring round (an "epoch") runs like this:
 3. **Risk-check.** Off-chain risk limits cap the size, reject low-conviction or malformed calls, and force cash when nothing fits. Nothing reaches the chain unchecked.
 4. **Settle on-chain.** The vault opens an epoch, runs the trade through a simple on-chain market, lets the real market move play out, and closes back to cash.
 5. **Score.** The vault measures its own realized USD profit and loss for the round and maps it to a 0–100 score (50 is breakeven). It writes that score to the validation registry.
-6. **Build reputation.** Scores accumulate into a track record. A separate allocation controller can then route pooled capital toward the agents whose records clear a minimum bar — and away from the underperforming ones.
+6. **Build reputation.** Scores accumulate into a track record. A separate allocation controller then routes pooled capital toward the agents whose records clear a minimum bar — and away from the underperforming ones.
 
 The agent's rationale is hashed and the hash stored alongside the score, so the words it used to justify a trade are locked in before anyone knows whether the trade worked.
+
+## Deposit once, capital follows performance
+
+You don't have to pick an agent. The **AllocationController is a pooled index**: deposit USD once and you get index shares representing a claim on the whole book. After each round the operator rebalances the index automatically — it recalls the deployed capital and re-deploys it across the eligible agents **weighted by their freshly-updated scores**, so money continuously flows toward whoever is proving themselves and away from those who aren't. An agent below the eligibility bar (a minimum track record and an average score at or above breakeven) draws nothing.
+
+Because the rebalance runs on the same schedule as the rounds, "deposit into the index" genuinely means "let the on-chain track record decide where my money goes" — no manual allocation, no trusted manager. You can still deposit directly into a single agent's vault if you want to back one strategy; the index is simply the hands-off option. Withdrawals are paid from the index's idle capital, which is replenished each rebalance.
 
 ## The core idea: the vault is the validator
 
@@ -113,9 +119,20 @@ cp .env.example .env   # fill in the LLM endpoint + the operator key
 npm run round
 ```
 
-`npm run round` reads the market, asks the model for each agent's move, runs the risk checks, executes each decision on-chain, and writes a full record of the round (decisions, rationales, scores, transaction hashes) to `agent/rationales/`.
+`npm run round` reads the market, asks the model for each agent's move, runs the risk checks, executes each decision on-chain, and writes a full record of the round (decisions, rationales, scores, transaction hashes) to `agent/rationales/`. After the round it rebalances the pooled index (see below).
 
-The runner uses a dedicated, low-risk operator key. The operator controls only the AIRunner, and the AIRunner is non-custodial — it can trade inside vaults but can never move anyone's funds out — so this key is deliberately separate from the deployer.
+To run rounds **autonomously** on a timer instead of by hand, use loop mode:
+
+```shell
+npm run loop                          # a round every 30 minutes
+ROUND_INTERVAL_MINUTES=120 npm run round   # or pick your own interval
+```
+
+The loop runs a round, rebalances the index, sleeps, and repeats until stopped. A failed round is logged but doesn't kill the loop — the next tick tries again.
+
+**Auto-allocation.** After each round the runner recalls the index's deployed capital and re-deploys it across the eligible agents weighted by their freshly-settled scores, so a plain deposit into the index flows to the best performers with no manual step. `allocate` is owner-gated, so the AllocationController's ownership must be transferred to the operator for this to run; until then the runner logs that it's skipping allocation and the rounds proceed normally.
+
+The runner uses a dedicated, low-risk operator key. The operator controls only the AIRunner (and, once ownership is transferred, the AllocationController), both of which are non-custodial — they can trade inside vaults and route pooled capital, but can never move anyone's funds out — so this key is deliberately separate from the deployer.
 
 ## Live deployment (Mantle Sepolia, chain 5003)
 

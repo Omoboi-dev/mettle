@@ -95,14 +95,16 @@ The runner is `onlyOwner`, owned by the off-chain operator key. It is non-custod
 
 ### AllocationController
 
-A pooled USD index that routes capital toward proven agents. Depositors get index shares; `allocate(candidates, amount)` deploys idle USD into official vaults weighted by each agent's validation score. Eligibility (`_eligibleWeight`) returns a vault's weight only if **all** of the following hold:
+A pooled USD index that routes capital toward proven agents. It is the hands-off way to back the whole book: a depositor calls `deposit(amount)` and receives index shares representing a pro-rata claim on total NAV (idle USD plus the value of every deployed position); `withdraw(shares)` burns shares and pays out from idle USD. `allocate(candidates, amount)` deploys idle USD into official vaults weighted by each agent's validation score, and `recall(vaults)` pulls deployed capital back to idle. Eligibility (`_eligibleWeight`) returns a vault's weight only if **all** of the following hold:
 
 - the vault is official (`factory.isOfficialVault`);
 - it is not mid-epoch;
 - its average score, **read filtered to itself as the only validator**, clears `minScore`;
 - it has at least `minEpochs` settled epochs.
 
-Otherwise its weight is zero. The candidate list must be strictly ascending (unique and bounded) so the allocation loop can't be gas-bricked, NAV is computed donation-proof from each vault's `totalAssets`, and `recall` can only pull capital from vaults that are between epochs. `renounceOwnership` is disabled so allocation can never be permanently frozen.
+Otherwise its weight is zero. The candidate list must be strictly ascending (unique and bounded) so the allocation loop can't be gas-bricked, NAV is computed donation-proof from each vault's `totalAssets`, and both `allocate` and `recall` only touch vaults between epochs (deposits/withdrawals are frozen while a vault's epoch is active). `renounceOwnership` is disabled so allocation can never be permanently frozen.
+
+**Auto-rebalance.** `deposit`/`withdraw`/`recall` are permissionless, but `allocate` is `onlyOwner`. The off-chain runner (as owner) calls `recall` then `allocate` after every round, so the index continuously re-weights toward the agents whose latest scores are strongest — a deposit "follows performance" without anyone choosing an agent. This is the one privileged step in the index; it can only *route* pooled capital among official vaults, never withdraw it to an external address.
 
 ## Off-chain components (`agent/`)
 
@@ -127,6 +129,8 @@ The safeguard between the model and the chain. It forces cash on an explicit cas
 
 Orchestrates one round. It loads the operator account, confirms the operator owns the AIRunner, reads the market, and then for each agent: asks the brain, runs the risk checks, resolves the on-chain asset and the move it will be scored against, simulates `runEpochAI` (which yields the resulting score and guards against a revert), sends it, and waits for the receipt. The on-chain step is wrapped in a retry that rotates across RPC endpoints, so a transient failure on one public node doesn't sink the round. Every decision — call, rationale, validated size, move, score, and transaction hash — is printed and saved to `agent/rationales/round-*.json`.
 
+After the round it calls `rebalanceIndex`, which (if the operator owns the AllocationController) recalls the index's deployed capital and re-allocates idle USD across the eligible vaults by their fresh scores. This step is defensive — it checks ownership, skips cleanly when there's nothing to deploy, and swallows any error so the round is never jeopardised by the index. Set `ROUND_INTERVAL_MINUTES` (or use `npm run loop`) to run round-then-rebalance on a timer; the loop logs and survives a failed cycle and continues on the next tick.
+
 ## Data flow of one round
 
 1. `run.ts` calls `market.loadMarket()` → real context and a held-out realized move per asset.
@@ -136,6 +140,7 @@ Orchestrates one round. It loads the operator account, confirms the operator own
 5. `AIRunner.runEpochAI(...)` runs `startEpoch → trade → trade → settleEpoch` on the vault.
 6. `StrategyVault.settleEpoch` computes realized P&L, maps it to a score, and writes it to the ValidationRegistry, naming itself validator.
 7. The score is now part of the agent's on-chain record, and `AllocationController` can read it (filtered to that vault) when routing capital.
+8. `run.ts` then rebalances the index: `AllocationController.recall(...)` pulls deployed capital back to idle, and `allocate(...)` re-deploys it across the eligible vaults weighted by the scores from this round — so pooled deposits track the latest performance automatically.
 
 ## Trust model and anti-gaming
 
@@ -145,7 +150,7 @@ The design assumes the off-chain brain could be wrong, biased, or adversarial, a
 - **Capital is ring-fenced per epoch**, so only accounted funds can be traded, and the vault is verified flat (by the accounted ledger) at both ends.
 - **The reasoning is committed before the outcome is known.** The rationale hash is stored at decision time; the words can't be changed to fit the result.
 - **Allocation trusts only filtered, gated scores.** Official-vault-only, self-validation-only, with track-record and quality minimums — so a lucky epoch or a fabricated score draws no capital.
-- **Operator power is bounded.** The operator can make agents trade; the non-custodial vault means it can never take funds.
+- **Operator power is bounded.** The operator can make agents trade and route the index's pooled capital among official vaults; the non-custodial vaults and the controller's allocate-only authority mean it can never take funds out to an external address.
 
 ## Deployment and seeding
 
