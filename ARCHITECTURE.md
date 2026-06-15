@@ -113,7 +113,7 @@ The service is TypeScript (run with `tsx`), using `viem` for chain access and an
 Loads real recent price context per asset. Bybit spot klines are the primary feed; CoinGecko is the fallback for networks where Bybit is blocked. CoinGecko calls are de-duplicated and spaced out to respect its rate limit. For each asset it returns:
 
 - `contextCloses` — the hourly closes the model is allowed to see.
-- `realizedMoveBps` — the move over a held-out window *after* the context (12 hours by default), which the model does **not** see and which the on-chain round is scored against. This is a genuine out-of-sample holdout: the model decides on data up to a cutoff, and is judged on what the market did next. MI4 is an equal-weight BTC/ETH/SOL blend; USDY is modelled as a near-flat yield line. Any asset whose feed fails degrades to a flat series rather than breaking the round.
+- `realizedMoveBps` — the move over a held-out window *after* the context (48 hours by default), which the model does **not** see and which the on-chain round is scored against. This is a genuine out-of-sample holdout: the model decides on data up to a cutoff, and is judged on what the market did over the next two days. MI4 is an equal-weight BTC/ETH/SOL blend; USDY is modelled as a near-flat yield line. Any asset whose feed fails degrades to a flat series rather than breaking the round.
 
 ### brain.ts
 
@@ -121,7 +121,7 @@ For each agent, builds a system prompt from the agent's strategy persona and a c
 
 ### risk.ts
 
-The safeguard between the model and the chain. It forces cash on an explicit cash call, on conviction below the minimum, on an unknown asset, or on a malformed size; caps size at the maximum; and applies a minimum trade size so an agent that does trade takes a real position rather than dust. It returns the validated decision plus a list of any adjustments it made, for transparency. It also clamps the realized move to the same range the on-chain runner enforces.
+The safeguard between the model and the chain. It forces cash on an explicit cash call, on conviction below the minimum, or on an unknown asset. For a valid trade it sizes the position by the agent's conviction — scaling from a minimum position at the conviction floor up to a full book at maximum confidence — so a confident read takes real risk while a marginal one stays small. It returns the validated decision plus a list of any adjustments it made, for transparency, and clamps the realized move to the same range the on-chain runner enforces.
 
 ### run.ts
 
