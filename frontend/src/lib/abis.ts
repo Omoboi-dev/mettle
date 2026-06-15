@@ -18,6 +18,18 @@ export const vaultAbi = parseAbi([
   "function agentId() view returns (uint256)",
   "function epochId() view returns (uint256)",
   "function epochActive() view returns (bool)",
+  "function shares(address) view returns (uint256)",
+  "function totalShares() view returns (uint256)",
+  "function deposit(uint256 amount) returns (uint256 mintedShares)",
+  "function withdraw(uint256 shareAmount) returns (uint256 usdOut)",
+]);
+
+export const erc20Abi = parseAbi([
+  "function balanceOf(address) view returns (uint256)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function mint(address to, uint256 amount)",
 ]);
 
 export const allocationAbi = parseAbi(["function eligibleWeight(address vault) view returns (uint256)"]);

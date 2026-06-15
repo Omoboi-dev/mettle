@@ -3,6 +3,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { ReputationGauge, scoreColor } from "../components/ui/ReputationGauge";
 import { TokenChip } from "../components/ui/TokenChip";
 import { CopyHash } from "../components/ui/CopyHash";
+import { VaultPanel } from "../components/VaultPanel";
 import { useMettleData } from "../context/MettleContext";
 import { addressUrl, ago, bpsPct, sizePct, txUrl, usd } from "../lib/format";
 
@@ -61,6 +62,11 @@ export function AgentDetailPage() {
         <Stat label="Epochs scored" value={String(agent.epochs)} />
         <Stat label="Capital managed" value={usd(agent.capitalUsd)} />
         <Stat label="Allocation" value={`${agent.allocPct.toFixed(0)}%`} />
+      </div>
+
+      {/* Invest */}
+      <div className="mt-4">
+        <VaultPanel vault={meta.vault} agentName={meta.name} />
       </div>
 
       {/* Decision history */}
